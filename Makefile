@@ -31,9 +31,21 @@ clean:
 docs:
 	cd docs; doxygen Doxyfile; cd ..;
 
-# runs cpplint (must be installed locally)
+# runs cpplint
+# this will be slow, but will give you total number of errors
 lint:
-	cpplint --filter=-legal/copyright,-build/include,-build/namespaces,-runtime/explicit,-build/header_guard,-runtime/references,-runtime/threadsafe_fn $(shell find ./service/include/simulationmodel/ ./service/src/simulationmodel/ -type f -name '*.cc' -o -name '*.h')
+ifeq ($(wildcard .venv/bin/.),)
+	make venv
+endif
+	.venv/bin/cpplint --filter=-legal/copyright,-build/include,-build/namespaces,-runtime/explicit,-build/header_guard,-runtime/references,-runtime/threadsafe_fn $(shell find ./service/include/simulationmodel/ ./service/src/simulationmodel/ -type f -name '*.cc' -o -name '*.h')
+
+# this will be much quicker, but you won't have the total number of errors at the end
+lintQ:
+ifeq ($(wildcard .venv/bin/.),)
+	make venv
+endif
+	find ./service/include/simulationmodel/ ./service/src/simulationmodel/ -type f -name '*.cc' -o -name '*.h' | xargs -n 1 -P 128 .venv/bin/cpplint --filter=-legal/copyright,-build/include,-build/namespaces,-runtime/explicit,-build/header_guard,-runtime/references,-runtime/threadsafe_fn
+
 
 venv:
 	@echo "Installing venv..."
